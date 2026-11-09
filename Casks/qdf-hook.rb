@@ -34,23 +34,14 @@ cask "qdf-hook" do
 
   binary "qdf-hook"
 
-  postflight do
-    system_command "/usr/bin/xattr",
-                   args: ["-dr", "com.apple.quarantine", staged_path],
-                   must_succeed: false
-    client = Dir["#{staged_path}/qdf-hookc/qdf-hookc-*"].first
-    if client
-      bin = "#{HOMEBREW_PREFIX}/bin/qdf-hookc"
-      FileUtils.cp client, bin
-      FileUtils.chmod 0755, bin
-      system_command "/usr/bin/xattr",
-                     args: ["-dr", "com.apple.quarantine", bin],
-                     must_succeed: false
-    end
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{staged_path}}"], must_succeed: false
+    copy "{{staged_path}}/qdf-hookc/qdf-hookc-*", "{{HOMEBREW_PREFIX}}/bin/qdf-hookc", source_glob: true
+    set_permissions "{{HOMEBREW_PREFIX}}/bin/qdf-hookc", "0755"
   end
 
-  uninstall_postflight do
-    FileUtils.rm_f "#{HOMEBREW_PREFIX}/bin/qdf-hookc"
+  uninstall_postflight_steps do
+    remove "{{HOMEBREW_PREFIX}}/bin/qdf-hookc"
   end
 
   # No zap stanza required
